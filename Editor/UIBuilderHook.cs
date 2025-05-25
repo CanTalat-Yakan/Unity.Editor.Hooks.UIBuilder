@@ -4,9 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.UI.Builder;
 using UnityEditor;
-using UnityEngine;
 using UnityEngine.UIElements;
-using static Codice.CM.Common.CmCallContext;
 
 namespace UnityEssentials
 {
@@ -14,6 +12,7 @@ namespace UnityEssentials
     public class UIBuilderHook
     {
         public static VisualElement Inspector;
+        public static VisualTreeAsset VisualTreeAsset;
 
         private static Builder s_builderWindow;
         private static VisualElement s_lastSelectedElement;
@@ -35,7 +34,8 @@ namespace UnityEssentials
             if (Builder.ActiveWindow != s_builderWindow)
             {
                 s_builderWindow = Builder.ActiveWindow;
-                Inspector = s_builderWindow?.inspector;
+                Inspector = s_builderWindow.inspector;
+                VisualTreeAsset = s_builderWindow.document.visualTreeAsset;
 
                 s_lastSelectedElement = null; // Reset on window change
 
@@ -92,7 +92,7 @@ namespace UnityEssentials
 
             while (current != null && current != docRoot)
             {
-                path.Insert(0, GetElementName(current));
+                path.Insert(0, GetElementName(current) + $"#{GetElementInfo(current)}");
                 current = current.parent;
             }
 
@@ -106,6 +106,9 @@ namespace UnityEssentials
             !string.IsNullOrEmpty(element.name)
                 ? element.name
                 : element.GetType().Name;
+
+        public static int GetElementInfo(VisualElement element) =>
+            (int)UIElementTypes.GetElementType(element);
     }
 }
 #endif
