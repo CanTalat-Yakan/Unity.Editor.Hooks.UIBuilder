@@ -10,12 +10,14 @@ namespace UnityEssentials
     public struct UIElementPathEntry
     {
         public string Name;
+        public string DisplayName;
         public int TypeIndex;
         public int OrderIndex;
 
-        public UIElementPathEntry(string name, int typeIndex, int orderIndex)
+        public UIElementPathEntry(string name, string displayName, int typeIndex, int orderIndex)
         {
             Name = name;
+            DisplayName = displayName;
             TypeIndex = typeIndex;
             OrderIndex = orderIndex;
         }
@@ -23,9 +25,10 @@ namespace UnityEssentials
 
     public class UIBuilderHookUtilities : MonoBehaviour
     {
-        public static void SetSelectedElementByPath(VisualElement element)
+        public static void SetSelectedElement(IEnumerable<UIElementPathEntry> path)
         {
-            Debug.Log($"Setting selected element: {element?.name} ({element?.GetType().Name})");
+            var element = FindElementByPath(UIBuilderHook.RootVisualElement, path);
+
 #if UNITY_EDITOR
             UIBuilderHook.SetSelectedElement(element);
 #endif
@@ -57,13 +60,13 @@ namespace UnityEssentials
             while (current != null && current != docRoot)
             {
                 var name = GetElementName(current);
-                var type = GetElementInfo(current);
+                var typeIndex = GetElementInfo(current);
                 var order = 0;
 
                 if (current.parent != null)
                 {
                     var siblings = current.parent.Children()
-                        .Where(e => GetElementName(e) == name && GetElementInfo(e) == type)
+                        .Where(e => GetElementName(e) == name && GetElementInfo(e) == typeIndex)
                         .ToList();
                     order = siblings.IndexOf(current);
                 }
@@ -71,7 +74,9 @@ namespace UnityEssentials
                 if (current == element)
                     orderIndex = order; // Only set out parameter for the original element
 
-                path.Insert(0, new UIElementPathEntry(name, type, order));
+                var displayName = GetElementName(current, orderIndex);
+
+                path.Insert(0, new UIElementPathEntry(name, displayName, typeIndex, order));
                 current = current.parent;
             }
 
@@ -102,11 +107,8 @@ namespace UnityEssentials
             return current;
         }
 
-        public static string GetSelectedElementName(VisualElement element) =>
-            GetElementName(element);
-
-        public static string GetElementName(VisualElement element) =>
-            element.name;
+        public static string GetElementName(VisualElement element, int typeIndex = 0) =>
+            element.name + (typeIndex > 0 ? $" {typeIndex}" : string.Empty);
 
         public static string GetElementDisplayName(VisualElement element) =>
             string.IsNullOrEmpty(element.name) 

@@ -51,11 +51,15 @@ namespace UnityEssentials
             if (Builder.ActiveWindow != s_builderWindow)
                 OnInitialization?.Invoke();
 
-            s_builderWindow = Builder.ActiveWindow;
-            Inspector = s_builderWindow.inspector;
-            VisualTreeAsset = s_builderWindow.document.visualTreeAsset;
-            RootVisualElement = s_builderWindow.hierarchy?.hierarchy[0];
-            //Debug.Log($"UIBuilderHook initialized with VisualTreeAsset: {VisualTreeAsset?.name}, RootVisualElement: {RootVisualElement?.name}");
+            try
+            {
+                s_builderWindow = Builder.ActiveWindow;
+                Inspector = s_builderWindow.inspector;
+                VisualTreeAsset = s_builderWindow.document.visualTreeAsset;
+                RootVisualElement = s_builderWindow.canvas.documentRootElement;
+            }
+            catch (Exception) { }
+
             OnFocusedChanged?.Invoke();
         }
 
@@ -79,13 +83,11 @@ namespace UnityEssentials
             if (s_builderWindow == null)
                 return null;
 
-            // Get the selection from the Builder window
             var selection = s_builderWindow.selection;
 
             if (selection == null || selection.selectionCount == 0)
                 return null;
 
-            // Return the first selected element
             return selection?.selection.First();
         }
 
@@ -95,12 +97,31 @@ namespace UnityEssentials
                 return;
 
             var selection = s_builderWindow.selection;
-            if (selection == null)
+            if (selection == null || element == null)
                 return;
 
-            // Use the Select method to set the selection.
-            // The first parameter is the source notifier, which can be null if you don't have one.
+            // Ensure the element is part of the current visual tree
+            if (!IsElementInHierarchy(element, RootVisualElement))
+                return;
+
             selection.Select(null, element);
+            element.MarkDirtyRepaint();
+            s_builderWindow.Repaint();
+        }
+
+        private static bool IsElementInHierarchy(VisualElement element, VisualElement root)
+        {
+            if (element == null || root == null)
+                return false;
+
+            var current = element;
+            while (current != null)
+            {
+                if (current == root)
+                    return true;
+                current = current.parent;
+            }
+            return false;
         }
     }
 }
