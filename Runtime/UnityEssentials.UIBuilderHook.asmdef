@@ -1,0 +1,16 @@
+{
+    "name": "UnityEssentials.UIBuilderHook",
+    "rootNamespace": "UnityEssentials",
+    "references": [
+        "GUID:23d88515503fc844cabb0e2fd918af85"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

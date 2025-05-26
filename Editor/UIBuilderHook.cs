@@ -85,52 +85,6 @@ namespace UnityEssentials
             // Return the first selected element
             return selection?.selection.First();
         }
-
-        public static IEnumerable<(string Name, int TypeIndex, int OrderIndex)> GetSelectedElementPath()
-        {
-            var element = GetSelectedElement();
-            if (element == null)
-                return null;
-
-            return GetElementPath(element);
-        }
-
-        public static IEnumerable<(string Name, int TypeIndex, int OrderIndex)> GetElementPath(VisualElement element)
-        {
-            var path = new List<(string Name, int TypeIndex, int OrderIndex)>();
-            var current = element;
-            var docRoot = element.GetFirstAncestorOfType<TemplateContainer>();
-
-            while (current != null && current != docRoot)
-            {
-                var name = GetElementName(current);
-                var typeIndex = GetElementInfo(current);
-                var orderIndex = 0;
-
-                if (current.parent != null)
-                {
-                    // Find the index among siblings with the same name and type
-                    var siblings = current.parent.Children()
-                        .Where(e => GetElementName(e) == name && GetElementInfo(e) == typeIndex)
-                        .ToList();
-                    orderIndex = siblings.IndexOf(current);
-                }
-
-                path.Insert(0, (name, typeIndex, orderIndex));
-                current = current.parent;
-            }
-
-            return path;
-        }
-
-        public static string GetSelectedElementName(VisualElement element) =>
-            GetElementName(element);
-
-        public static string GetElementName(VisualElement element) =>
-            element.name;
-
-        public static int GetElementInfo(VisualElement element) =>
-            (int)UIElementTypes.GetElementType(element);
     }
 }
 #endif
