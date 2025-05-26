@@ -23,8 +23,17 @@ namespace UnityEssentials
 
     public class UIBuilderHookUtilities : MonoBehaviour
     {
-        public static IEnumerable<UIElementPathEntry> GetSelectedElementPath()
+        public static void SetSelectedElementByPath(VisualElement element)
         {
+            Debug.Log($"Setting selected element: {element?.name} ({element?.GetType().Name})");
+#if UNITY_EDITOR
+            UIBuilderHook.SetSelectedElement(element);
+#endif
+        }
+        
+        public static IEnumerable<UIElementPathEntry> GetSelectedElementPath(out int orderIndex)
+        {
+            orderIndex = 0;
             VisualElement element = null;
 
 #if UNITY_EDITOR
@@ -34,31 +43,35 @@ namespace UnityEssentials
             if (element == null)
                 return null;
 
-            return GetElementPath(element);
+            return GetElementPath(element, out orderIndex);
         }
 
-        public static IEnumerable<UIElementPathEntry> GetElementPath(VisualElement element)
+        public static IEnumerable<UIElementPathEntry> GetElementPath(VisualElement element, out int orderIndex)
         {
             var path = new List<UIElementPathEntry>();
             var current = element;
             var docRoot = element.GetFirstAncestorOfType<TemplateContainer>();
 
+            orderIndex = 0;
+
             while (current != null && current != docRoot)
             {
                 var name = GetElementName(current);
-                var typeIndex = GetElementInfo(current);
-                var orderIndex = 0;
+                var type = GetElementInfo(current);
+                var order = 0;
 
                 if (current.parent != null)
                 {
-                    // Find the index among siblings with the same name and type
                     var siblings = current.parent.Children()
-                        .Where(e => GetElementName(e) == name && GetElementInfo(e) == typeIndex)
+                        .Where(e => GetElementName(e) == name && GetElementInfo(e) == type)
                         .ToList();
-                    orderIndex = siblings.IndexOf(current);
+                    order = siblings.IndexOf(current);
                 }
 
-                path.Insert(0, new UIElementPathEntry(name, typeIndex, orderIndex));
+                if (current == element)
+                    orderIndex = order; // Only set out parameter for the original element
+
+                path.Insert(0, new UIElementPathEntry(name, type, order));
                 current = current.parent;
             }
 
@@ -94,6 +107,11 @@ namespace UnityEssentials
 
         public static string GetElementName(VisualElement element) =>
             element.name;
+
+        public static string GetElementDisplayName(VisualElement element) =>
+            string.IsNullOrEmpty(element.name) 
+                ? element.GetType().Name
+                : element.name;
 
         public static int GetElementInfo(VisualElement element) =>
             (int)UIElementTypes.GetElementType(element);

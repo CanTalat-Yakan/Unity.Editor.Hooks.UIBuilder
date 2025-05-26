@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.UI.Builder;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UnityEssentials
@@ -13,6 +14,7 @@ namespace UnityEssentials
     {
         public static VisualElement Inspector;
         public static VisualTreeAsset VisualTreeAsset;
+        public static VisualElement RootVisualElement;
 
         private static Builder s_builderWindow;
         private static VisualElement s_lastSelectedElement;
@@ -52,7 +54,8 @@ namespace UnityEssentials
             s_builderWindow = Builder.ActiveWindow;
             Inspector = s_builderWindow.inspector;
             VisualTreeAsset = s_builderWindow.document.visualTreeAsset;
-
+            RootVisualElement = s_builderWindow.hierarchy?.hierarchy[0];
+            //Debug.Log($"UIBuilderHook initialized with VisualTreeAsset: {VisualTreeAsset?.name}, RootVisualElement: {RootVisualElement?.name}");
             OnFocusedChanged?.Invoke();
         }
 
@@ -84,6 +87,20 @@ namespace UnityEssentials
 
             // Return the first selected element
             return selection?.selection.First();
+        }
+
+        public static void SetSelectedElement(VisualElement element)
+        {
+            if (s_builderWindow == null)
+                return;
+
+            var selection = s_builderWindow.selection;
+            if (selection == null)
+                return;
+
+            // Use the Select method to set the selection.
+            // The first parameter is the source notifier, which can be null if you don't have one.
+            selection.Select(null, element);
         }
     }
 }
