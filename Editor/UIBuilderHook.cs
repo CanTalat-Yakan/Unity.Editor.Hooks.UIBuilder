@@ -17,6 +17,7 @@ namespace UnityEssentials
         private static Builder s_builderWindow;
         private static VisualElement s_lastSelectedElement;
 
+        public static Action OnFocusedChanged { get; set; }
         public static Action OnInitialization { get; set; }
         public static Action OnSelectionChanged { get; set; }
 
@@ -24,7 +25,21 @@ namespace UnityEssentials
         {
             EditorWindow.windowFocusChanged += OnFocusChanged;
             EditorApplication.update += PollSelectionChanged;
+            EditorApplication.update += PollForBuilderWindow;
         }
+
+        private static void PollForBuilderWindow()
+        {
+            if (Builder.ActiveWindow != null)
+            {
+                OnFocusChanged();
+                EditorApplication.update -= PollForBuilderWindow;
+            }
+        }
+
+        [InitializeOnLoadMethod]
+        public static void Initialize() =>
+            OnInitialization?.Invoke();
 
         private static void OnFocusChanged()
         {
@@ -32,15 +47,13 @@ namespace UnityEssentials
                 return;
 
             if (Builder.ActiveWindow != s_builderWindow)
-            {
-                s_builderWindow = Builder.ActiveWindow;
-                Inspector = s_builderWindow.inspector;
-                VisualTreeAsset = s_builderWindow.document.visualTreeAsset;
-
-                s_lastSelectedElement = null; // Reset on window change
-
                 OnInitialization?.Invoke();
-            }
+
+            s_builderWindow = Builder.ActiveWindow;
+            Inspector = s_builderWindow.inspector;
+            VisualTreeAsset = s_builderWindow.document.visualTreeAsset;
+
+            OnFocusedChanged?.Invoke();
         }
 
         private static void PollSelectionChanged()
@@ -73,39 +86,48 @@ namespace UnityEssentials
             return selection?.selection.First();
         }
 
-        public static string GetSelectedElementPath()
+        public static IEnumerable<(string Name, int TypeIndex, int OrderIndex)> GetSelectedElementPath()
         {
             var element = GetSelectedElement();
             if (element == null)
                 return null;
 
-            // Get the path of the selected element
             return GetElementPath(element);
         }
 
-        public static string GetElementPath(VisualElement element)
+        public static IEnumerable<(string Name, int TypeIndex, int OrderIndex)> GetElementPath(VisualElement element)
         {
-            // Walk up the hierarchy until we hit the document root
-            var path = new List<string>();
+            var path = new List<(string Name, int TypeIndex, int OrderIndex)>();
             var current = element;
             var docRoot = element.GetFirstAncestorOfType<TemplateContainer>();
 
             while (current != null && current != docRoot)
             {
-                path.Insert(0, GetElementName(current) + $"#{GetElementInfo(current)}");
+                var name = GetElementName(current);
+                var typeIndex = GetElementInfo(current);
+                var orderIndex = 0;
+
+                if (current.parent != null)
+                {
+                    // Find the index among siblings with the same name and type
+                    var siblings = current.parent.Children()
+                        .Where(e => GetElementName(e) == name && GetElementInfo(e) == typeIndex)
+                        .ToList();
+                    orderIndex = siblings.IndexOf(current);
+                }
+
+                path.Insert(0, (name, typeIndex, orderIndex));
                 current = current.parent;
             }
 
-            return string.Join("/", path);
+            return path;
         }
 
         public static string GetSelectedElementName(VisualElement element) =>
-            GetElementName(GetSelectedElement());
+            GetElementName(element);
 
         public static string GetElementName(VisualElement element) =>
-            !string.IsNullOrEmpty(element.name)
-                ? element.name
-                : element.GetType().Name;
+            element.name;
 
         public static int GetElementInfo(VisualElement element) =>
             (int)UIElementTypes.GetElementType(element);
