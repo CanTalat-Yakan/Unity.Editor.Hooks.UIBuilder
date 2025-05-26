@@ -59,14 +59,14 @@ namespace UnityEssentials
 
             while (current != null && current != docRoot)
             {
-                var name = GetElementName(current);
+                var name = current.name;
                 var typeIndex = GetElementInfo(current);
                 var order = 0;
 
                 if (current.parent != null)
                 {
                     var siblings = current.parent.Children()
-                        .Where(e => GetElementName(e) == name && GetElementInfo(e) == typeIndex)
+                        .Where(e => e.name == name && GetElementInfo(e) == typeIndex)
                         .ToList();
                     order = siblings.IndexOf(current);
                 }
@@ -74,7 +74,7 @@ namespace UnityEssentials
                 if (current == element)
                     orderIndex = order; // Only set out parameter for the original element
 
-                var displayName = GetElementName(current, orderIndex);
+                var displayName = GetElementDisplayName(current, orderIndex);
 
                 path.Insert(0, new UIElementPathEntry(name, displayName, typeIndex, order));
                 current = current.parent;
@@ -107,13 +107,11 @@ namespace UnityEssentials
             return current;
         }
 
-        public static string GetElementName(VisualElement element, int typeIndex = 0) =>
-            element.name + (typeIndex > 0 ? $" {typeIndex}" : string.Empty);
-
-        public static string GetElementDisplayName(VisualElement element) =>
-            string.IsNullOrEmpty(element.name) 
+        public static string GetElementDisplayName(VisualElement element, int typeIndex = 0) =>
+            (string.IsNullOrEmpty(element.name) 
                 ? element.GetType().Name
-                : element.name;
+                : element.name) + 
+            (typeIndex > 0 ? $" {typeIndex}" : string.Empty);
 
         public static int GetElementInfo(VisualElement element) =>
             (int)UIElementTypes.GetElementType(element);
