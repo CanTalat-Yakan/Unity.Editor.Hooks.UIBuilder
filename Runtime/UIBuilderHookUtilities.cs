@@ -27,9 +27,8 @@ namespace UnityEssentials
     {
         public static void SetSelectedElement(IEnumerable<UIElementPathEntry> path)
         {
-            var element = FindElementByPath(UIBuilderHook.RootVisualElement, path);
-
 #if UNITY_EDITOR
+            var element = FindElementByPath(UIBuilderHook.RootVisualElement, path);
             UIBuilderHook.SetSelectedElement(element);
 #endif
         }
