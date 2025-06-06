@@ -4,6 +4,7 @@ namespace UnityEssentials
 {
     public enum UIElementType
     {
+        None,
         VisualElement,
         BindableElement,
         Button,
