@@ -84,6 +84,9 @@ namespace UnityEssentials
 
         public static VisualElement FindElementByPath(VisualElement root, IEnumerable<UIElementPathEntry> path)
         {
+            if(path == null || !path.Any())
+                return null;
+
             var current = root;
             foreach (var element in path)
             {
