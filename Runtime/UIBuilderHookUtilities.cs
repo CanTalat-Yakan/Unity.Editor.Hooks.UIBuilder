@@ -52,11 +52,11 @@ namespace UnityEssentials
         {
             var path = new List<UIElementPathEntry>();
             var current = element;
-            var docRoot = element.GetFirstAncestorOfType<TemplateContainer>();
+            var documentRoot = element.GetFirstAncestorOfType<TemplateContainer>();
 
             orderIndex = 0;
 
-            while (current != null && current != docRoot)
+            while (current != null && current != documentRoot)
             {
                 var name = current.name;
                 var typeIndex = GetElementInfo(current);
