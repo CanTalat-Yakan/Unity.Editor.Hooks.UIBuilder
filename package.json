@@ -1,7 +1,7 @@
 {
-  "name": "com.unityessentials.uibuilderhook",
-  "version": "1.0.0",
-  "displayName": "Unity Editor Hooks UIBuilder",
+  "name": "com.unityessentials.editor.hooks.uibuilder",
+  "version": "2.0.0",
+  "displayName": "Editor Hooks UIBuilder",
   "description": "This is a part of the UnityEssentials Ecosystem",
   "unity": "6000.0",
   "unityRelease": "",
